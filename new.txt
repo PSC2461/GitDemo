@@ -1,0 +1,124 @@
+package xmlverify;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.DocumentBuilder;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+import org.w3c.dom.Node;
+import org.w3c.dom.Element;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class XmlVerify {
+
+	public static void main(String[] args) {
+
+		String baseXmlPath="C:\\Users\\pankaj.chaudhari\\Desktop\\Base\\Base.xml";
+		String refXmlPath ="C:\\Users\\pankaj.chaudhari\\Desktop\\Base\\Ref.xml";
+		
+		XmlVerify objXmlVerify = new XmlVerify();
+	    objXmlVerify.VerifyXml(baseXmlPath,refXmlPath);
+	}
+
+	public void VerifyXml(String baseXmlPath, String refXmlPath) {
+		boolean flag = false;
+		try {
+			// Read the data from Base.xml
+			List<String> ActualDate = new ArrayList<String>();
+			List<String> TransactionDate = new ArrayList<String>();
+			List<String> Amount = new ArrayList<String>();
+			List<String> Name = new ArrayList<String>();
+			List<String> ClientAccountId = new ArrayList<String>();
+			List<String> BusinessUnit = new ArrayList<String>();
+
+			NodeList nodeList = getNodeList(baseXmlPath);
+
+			for (int itr = 0; itr < nodeList.getLength(); itr++) {
+				Node nNode = nodeList.item(itr);
+				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+					Element eElement = (Element) nNode;
+					ActualDate.add(eElement.getAttribute("ActualDate"));
+					TransactionDate.add(eElement.getAttribute("TransactionDate"));
+					Amount.add(eElement.getAttribute("Amount"));
+					Name.add(eElement.getAttribute("Name"));
+					ClientAccountId.add(eElement.getAttribute("ClientAccountId"));
+					BusinessUnit.add(eElement.getAttribute("BusinessUnit"));
+				}
+			}
+
+			// Read the data from Ref.xml
+			List<String> ActualDater = new ArrayList<String>();
+			List<String> TransactionDater = new ArrayList<String>();
+			List<String> Amountr = new ArrayList<String>();
+			List<String> Namer = new ArrayList<String>();
+			List<String> ClientAccountIdr = new ArrayList<String>();
+			List<String> BusinessUnitr = new ArrayList<String>();
+
+			NodeList nodeListr = getNodeList(refXmlPath);
+			for (int it = 0; it < nodeListr.getLength(); it++) {
+				Node nNoder = nodeListr.item(it);
+				if (nNoder.getNodeType() == Node.ELEMENT_NODE) {
+					Element eElementr = (Element) nNoder;
+					ActualDater.add(eElementr.getAttribute("ActualDate"));
+					TransactionDater.add(eElementr.getAttribute("TransactionDate"));
+					Amountr.add(eElementr.getAttribute("Amount"));
+					Namer.add(eElementr.getAttribute("Name"));
+					ClientAccountIdr.add(eElementr.getAttribute("ClientAccountId"));
+					BusinessUnitr.add(eElementr.getAttribute("BusinessUnit"));
+				}
+			}
+			
+			for (String am : Amountr) {
+				boolean am_flag = Amount.contains(am);
+				if(am_flag==false) {
+					flag=false;
+					System.out.println( am +" value did not match in ref.xml\n");
+					
+				}else {
+					flag=true;
+					
+				}
+			}
+			
+			for (String trd : TransactionDater) {
+				boolean am_flag = TransactionDate.contains(trd);
+				if(am_flag==false) {
+					flag=false;
+					System.out.println( trd +" value did not match in ref.xml\n");
+				}else {
+					flag=true;
+				}
+			}
+
+			/*
+			 * boolean ActualDateB = ActualDater.containsAll(ActualDate); boolean
+			 * TransactionDateB = TransactionDater.containsAll(TransactionDate); boolean
+			 * AmountB = Amountr.containsAll(Amount); boolean NameB =
+			 * Namer.containsAll(Name); boolean ClientAccountIdB =
+			 * ClientAccountIdr.containsAll(ClientAccountId); boolean BusinessUnitB =
+			 * BusinessUnitr.containsAll(BusinessUnit);
+			 */
+
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static NodeList getNodeList(String path) throws ParserConfigurationException, SAXException, IOException {
+		// Read and list data from Ref.xml file.
+		// creating a constructor of file class and parsing an XML file
+		File filer = new File(path);
+		// an instance of factory that gives a document builder
+		DocumentBuilderFactory dbfr = DocumentBuilderFactory.newInstance();
+		// an instance of builder to parse the specified xml file
+		DocumentBuilder dbr = dbfr.newDocumentBuilder();
+		Document docr = dbr.parse(filer);
+		docr.getDocumentElement().normalize();
+		NodeList nodeListr = docr.getElementsByTagName("UserDefinedAmount");
+		return nodeListr;
+	}
+}
