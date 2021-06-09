@@ -1,0 +1,225 @@
+package RevportParis3.RevportAutomation;
+
+/*
+ * 1. If two values mismatch (Amount, activation date) - It should display
+ * 2. If no mismatch - display message..No mismatch found
+ * 3. If client account id or Name mismatch, then show mismatch result
+ * 
+ * 
+ */
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.DocumentBuilder;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+import org.w3c.dom.Node;
+import org.w3c.dom.Element;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class compareXmls {
+
+	public static void main(String[] args) {
+
+		String baseXmlPath = "D:\\TA_PSC\\Initiative 46515\\Automation\\XML\\SHORTFALL_Input.xml";
+		String refXmlPath = "D:\\TA_PSC\\Initiative 46515\\Automation\\XML\\SHORTFALL_Reference.xml";
+
+		compareXmls objXmlVerify = new compareXmls();
+		objXmlVerify.VerifyXml(baseXmlPath, refXmlPath);
+	}
+
+	public void VerifyXml(String baseXmlPath, String refXmlPath) {
+		boolean flag = false;
+		try {
+			// Read the data from Base.xml
+			List<String> ActualDate = new ArrayList<String>();
+			List<String> TransactionDate = new ArrayList<String>();
+			List<String> Amount = new ArrayList<String>();
+			List<String> Name = new ArrayList<String>();
+			List<String> ClientAccountId = new ArrayList<String>();
+			// List<String> BusinessUnit = new ArrayList<String>();
+
+			NodeList nodeList = getNodeList(baseXmlPath);
+
+			List<List<String>> mainBaseList = new ArrayList<List<String>>();
+
+			for (int itr = 0; itr < nodeList.getLength(); itr++) {
+				Node nNode = nodeList.item(itr);
+				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+					Element eElement = (Element) nNode;
+					ActualDate.add(eElement.getAttribute("ActualDate"));
+					TransactionDate.add(eElement.getAttribute("TransactionDate"));
+					Amount.add(eElement.getAttribute("Amount"));
+					Name.add(eElement.getAttribute("Name"));
+					ClientAccountId.add(eElement.getAttribute("ClientAccountId"));
+					// BusinessUnit.add(eElement.getAttribute("BusinessUnit"));
+
+					List<String> base_list = new ArrayList<String>();
+					base_list.add(eElement.getAttribute("ActualDate"));
+					base_list.add(eElement.getAttribute("TransactionDate"));
+					base_list.add(eElement.getAttribute("Amount"));
+					base_list.add(eElement.getAttribute("Name"));
+					base_list.add(eElement.getAttribute("ClientAccountId"));
+					// base_list.add(eElement.getAttribute("BusinessUnit"));
+					mainBaseList.add(base_list);
+
+				}
+			}
+
+			List<List<String>> mainRefList = new ArrayList<List<String>>();
+
+			NodeList nodeListr = getNodeList(refXmlPath);
+			for (int it = 0; it < nodeListr.getLength(); it++) {
+				Node nNoder = nodeListr.item(it);
+				if (nNoder.getNodeType() == Node.ELEMENT_NODE) {
+					Element eElementr = (Element) nNoder;
+
+					List<String> ref_list = new ArrayList<String>();
+					ref_list.add(eElementr.getAttribute("ActualDate"));
+					ref_list.add(eElementr.getAttribute("TransactionDate"));
+					ref_list.add(eElementr.getAttribute("Amount"));
+					ref_list.add(eElementr.getAttribute("Name"));
+					ref_list.add(eElementr.getAttribute("ClientAccountId"));
+					// ref_list.add(eElementr.getAttribute("BusinessUnit"));
+					mainRefList.add(ref_list);
+
+				}
+			}
+
+			for (List<String> listRef : mainRefList) {
+				List<String> listBaseglobal = null;
+				flag = false;
+				for (List<String> listBase : mainBaseList) {
+					listBaseglobal = listBase;
+					flag = listRef.containsAll(listBase);
+					if (flag == true) {
+						break;
+					}
+					// System.out.println(listBase.toString() + " :Base list\n");
+				}
+
+				if (flag == false) {
+
+					// System.out.println(listRef.toString() + " :Reference list\n");
+
+					if (ClientAccountId.contains(listRef.get(4))) {
+
+						List<Integer> ind = new ArrayList<Integer>();
+						for (int x = 0; x < ClientAccountId.size(); x++) {
+							if (ClientAccountId.get(x).trim().toString().contains(listRef.get(4).trim().toString())) {
+								ind.add(x);
+
+							}
+						}
+
+						for (int y = 0; y < ind.size(); y++) {
+							String refName = listRef.get(3).trim().toString();
+							String baseName = Name.get(ind.get(y)).trim().toString();
+							String refId = listRef.get(4).trim().toString();
+							String baseId = ClientAccountId.get(ind.get(y)).trim().toString();
+							if (baseName.equals(refName)) {
+								System.out.println("---------------------------------------------------------------------");
+								
+								if (!Amount.get(ind.get(y)).trim().toString().contains(listRef.get(2))) {
+									System.out.println("Amount MISMATCHED");
+									
+									if (!TransactionDate.get(ind.get(y)).trim().toString().equals(listRef.get(1))) {
+										System.out.println("TransactionDate MISMATCHED");
+										
+										
+									}
+									if (!ActualDate.get(ind.get(y)).trim().toString().equals(listRef.get(0))) {
+										
+										System.out.println("ActualDate MISMATCHED");
+									}
+									System.out.println("\n Input XML    : ["
+											+ ActualDate.get(ind.get(y)) + ", " + TransactionDate.get(ind.get(y))
+											+ ", " + Amount.get(ind.get(y)) + ", " + Name.get(ind.get(y)) + ", "
+											+ ClientAccountId.get(ind.get(y)) + "]");
+									System.out.println(" Reference XML: " + listRef + "\n");
+									
+									
+								} else {
+
+									if (!TransactionDate.get(ind.get(y)).trim().toString().equals(listRef.get(1))) {
+										System.out.println("TransactionDate MISMATCHED\n Input XML    : ["
+												+ ActualDate.get(ind.get(y)) + ", " + TransactionDate.get(ind.get(y))
+												+ ", " + Amount.get(ind.get(y)) + ", " + Name.get(ind.get(y)) + ", "
+												+ ClientAccountId.get(ind.get(y)) + "]");
+										System.out.println(" Reference XML: " + listRef);
+
+									}
+									if (!ActualDate.get(ind.get(y)).trim().toString().equals(listRef.get(0))) {
+
+										System.out.println("*ActualDate MISMATCHED\n Input XML    : ["
+												+ ActualDate.get(ind.get(y)) + ", " + TransactionDate.get(ind.get(y))
+												+ ", " + Amount.get(ind.get(y)) + ", " + Name.get(ind.get(y)) + ", "
+												+ ClientAccountId.get(ind.get(y)) + "]");
+										System.out.println(" Reference XML: " + listRef + "\n");
+									}
+								
+
+								}
+							}
+
+							else if (Amount.get(ind.get(y)).trim().toString().contains(listRef.get(2))) {
+								if (baseName != refName) {
+									System.out.println("BaseName MISMATCHED\n Input XML    : ["
+											+ ActualDate.get(ind.get(y)) + ", " + TransactionDate.get(ind.get(y)) + ", "
+											+ Amount.get(ind.get(y)) + ", " + Name.get(ind.get(y)) + ", "
+											+ ClientAccountId.get(ind.get(y)) + "]");
+									System.out.println(" Reference XML: " + listRef + "\n");
+								}
+								if (baseId != refId) {
+									System.out.println("CLientID MISMATCHED\n Input XML    : ["
+											+ ActualDate.get(ind.get(y)) + ", " + TransactionDate.get(ind.get(y)) + ", "
+											+ Amount.get(ind.get(y)) + ", " + Name.get(ind.get(y)) + ", "
+											+ ClientAccountId.get(ind.get(y)) + "]");
+									System.out.println(" Reference XML: " + listRef + "\n");
+								}
+							}
+
+						}
+
+					} 
+					else  {	
+						// if (Amount.toString().contains(listRef.get(2)) == true)
+						 System.out.println(Amount.toString().contains(listRef.get(2)));
+						System.out.println("********************");
+						int a = Amount.indexOf(listRef.get(2));
+						if (!ClientAccountId.get(a).equals(listRef.get(4))) {
+
+							System.out.println("CLIENT ACCOUNTID MISMATCHED \n Base Row: Amount: " + Amount.get(a)
+									+ " Name:" + Name.get(a) + " ClientAccountId:" + ClientAccountId.get(a));
+							System.out.println("Reference Row : " + listRef);
+						}
+					}
+					
+
+				}
+
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static NodeList getNodeList(String path) throws ParserConfigurationException, SAXException, IOException {
+		// Read and list data from Ref.xml file.
+		// creating a constructor of file class and parsing an XML file
+		File filer = new File(path);
+		// an instance of factory that gives a document builder
+		DocumentBuilderFactory dbfr = DocumentBuilderFactory.newInstance();
+		// an instance of builder to parse the specified xml file
+		DocumentBuilder dbr = dbfr.newDocumentBuilder();
+		Document docr = dbr.parse(filer);
+		docr.getDocumentElement().normalize();
+		NodeList nodeListr = docr.getElementsByTagName("UserDefinedAmount");
+		return nodeListr;
+	}
+}
